@@ -4,23 +4,106 @@
 
 	<groupId>com.pelzer.util</groupId>
 	<artifactId>pelzer-spring</artifactId>
-	<version>1.1.8</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 
-	<name>pelzer-spring</name>
-	<url>http://maven.apache.org</url>
-
+	<name>Pelzer Java Spring Utilities</name>
+	<description>The Pelzer.com Java Spring Utilities package.</description>
+	<url>http://util.pelzer.com/</url>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+	<developers>
+		<developer>
+			<id>jpelzer</id>
+			<name>Jason Pelzer</name>
+			<email>util.pelzer.com@pelzer.com</email>
+			<url>http://www.pelzer.com</url>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>-5</timezone>
+		</developer>
+	</developers>
+	<licenses>
+		<license>
+			<name>Apache 2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:git:git@github.com:jpelzer/pelzer-spring.git</connection>
+		<developerConnection>scm:git:git@github.com:jpelzer/pelzer-spring.git</developerConnection>
+		<url>git@github.com:jpelzer/pelzer-spring.git</url>
+	</scm>
+	<reporting>
+		<plugins>
+			<!-- Javadoc -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</reporting>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.springframework.version>3.0.5.RELEASE</org.springframework.version>
+		<org.springframework.version>3.1.2.RELEASE</org.springframework.version>
 	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.0.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<!-- Turn off the warning that m2eclipse doesn't support 'enforce' -->
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-enforcer-plugin</artifactId>
+										<versionRange>[1.0.0,)</versionRange>
+										<goals>
+											<goal>enforce</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+	</build>
+
 	<dependencies>
 		<!-- This should be kept in sync with pelzer-util -->
 		<dependency>
 			<groupId>com.pelzer.util</groupId>
 			<artifactId>pelzer-util</artifactId>
 			<version>1.1.8</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -48,4 +131,18 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<distributionManagement>
+		<site>
+			<id>dropbox</id>
+			<url>file:///Users/jpelzer/Dropbox/workspace/github-sites/pelzer-spring</url>
+		</site>
+		<repository>
+			<id>sonatype-nexus-staging</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>sonatype-nexus-snapshots</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>
