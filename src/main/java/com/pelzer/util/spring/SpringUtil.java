@@ -1,7 +1,7 @@
 package com.pelzer.util.spring;
 
-import java.lang.reflect.Field;
-
+import com.pelzer.util.OverridableFields;
+import com.pelzer.util.PropertyManager;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
@@ -11,8 +11,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Service;
 
-import com.pelzer.util.OverridableFields;
-import com.pelzer.util.PropertyManager;
+import java.lang.reflect.Field;
 
 /**
  * Utility class for interfacing with Spring. By default it looks for spring
@@ -24,12 +23,13 @@ import com.pelzer.util.PropertyManager;
  * </code>
  */
 @Service(SpringUtil.BEAN_NAME)
-public final class SpringUtil implements BeanFactoryAware, ApplicationContextAware {
+public final class SpringUtil implements BeanFactoryAware, ApplicationContextAware{
   public static final String BEAN_NAME = "com.pelzer.util.spring.SpringUtil";
 
-  public static class SpringUtilConstants extends OverridableFields {
-    public static String[] CONTEXT_DEFINITION = new String[] { "classpath*:beans.xml", "classpath*:applicationContext.xml" };
-    static {
+  public static class SpringUtilConstants extends OverridableFields{
+    public static String[] CONTEXT_DEFINITION = new String[]{"classpath*:beans.xml", "classpath*:applicationContext.xml"};
+
+    static{
       new SpringUtilConstants().init();
     }
   }
@@ -47,17 +47,16 @@ public final class SpringUtil implements BeanFactoryAware, ApplicationContextAwa
    * direction, so if you call this twice, you're not following that advice.
    * Instead, you should call SpringUtil.{@link #getInstance()}.
    * {@link #getBean(Class)}
-   * 
-   * @throws org.springframework.beans.BeansException
-   *           If there is a problem loading the bean, if it does not have a
-   *           'BEAN_NAME' property, or if you call this method a second time.
+   *
+   * @throws org.springframework.beans.BeansException If there is a problem loading the bean, if it does not have a
+   *                                                  'BEAN_NAME' property, or if you call this method a second time.
    */
-  public static <T extends Object> T getSpringBean(final Class<T> beanClass) {
+  public static <T> T getSpringBean(final Class<T> beanClass){
     return getSpringBean(SpringUtilConstants.CONTEXT_DEFINITION, beanClass);
   }
 
-  public static <T extends Object> T getSpringBean(final String[] beanContextDefinitions, final Class<T> beanClass) {
-    if (hasGetSpringBeanBeenCalled)
+  public static <T> T getSpringBean(final String[] beanContextDefinitions, final Class<T> beanClass){
+    if(hasGetSpringBeanBeenCalled)
       throw new BeanCreationException("SpringUtil.getSpringBean(...) can only be called once! See the javadocs, buster!");
     hasGetSpringBeanBeenCalled = true;
 
@@ -66,14 +65,14 @@ public final class SpringUtil implements BeanFactoryAware, ApplicationContextAwa
     return util.getBean(beanClass);
   }
 
-  private BeanFactory        beanFactory        = null;
+  private BeanFactory beanFactory = null;
   private ApplicationContext applicationContext = null;
 
   /**
    * Part of the {@link BeanFactoryAware} interface, allows Spring to inject the
    * factory that created this bean for later use in {@link #getBean(Class)}.
    */
-  public void setBeanFactory(final BeanFactory beanFactory) {
+  public void setBeanFactory(final BeanFactory beanFactory){
     this.beanFactory = beanFactory;
   }
 
@@ -87,35 +86,27 @@ public final class SpringUtil implements BeanFactoryAware, ApplicationContextAwa
    * beans injected into your class automatically by Spring. If you choose to
    * use this method, please check with Jason to make sure there isn't a better
    * way!
-   * 
-   * @throws org.springframework.beans.BeansException
-   *           If there is a problem loading the bean or it does not have a
-   *           'BEAN_NAME' property
+   *
+   * @throws org.springframework.beans.BeansException If there is a problem loading the bean or it does not have a
+   *                                                  'BEAN_NAME' property
    */
-  public <T extends Object> T getBean(final Class<T> beanClass) {
-    if (beanFactory == null)
+  public <T> T getBean(final Class<T> beanClass){
+    if(beanFactory == null)
       throw new BeanCreationException("SpringUtil.getBean(...) called on a non-managed SpringUtil instance.");
 
     // Figure out what's stored in 'BEAN_NAME'
-    String beanName = "";
-    try {
-      final Field field = beanClass.getField("BEAN_NAME");
-      beanName = String.valueOf(field.get(null));
+    try{
+      return beanFactory.getBean(readBeanName(beanClass), beanClass);
+    }catch(final Exception ex){
+      // Couldn't load by BEAN_NAME, inaccessible. Let's load by class.
+      return beanFactory.getBean(beanClass);
     }
-    catch (final SecurityException ex) {
-      throw new BeanCreationException("Security exception accessing 'BEAN_NAME' for " + beanClass.getName(), ex);
-    }
-    catch (final NoSuchFieldException ex) {
-      throw new BeanCreationException("NoSuchFieldException accessing 'BEAN_NAME' for " + beanClass.getName(), ex);
-    }
-    catch (final IllegalArgumentException ex) {
-      throw new BeanCreationException("IllegalArgumentException accessing 'BEAN_NAME' for " + beanClass.getName(), ex);
-    }
-    catch (final IllegalAccessException ex) {
-      throw new BeanCreationException("IllegalAccessException accessing 'BEAN_NAME' for " + beanClass.getName(), ex);
-    }
+  }
 
-    return beanFactory.getBean(beanName, beanClass);
+  /** Find what's stored in 'BEAN_NAME' and return it, or toss an exception. */
+  private String readBeanName(Class beanClass) throws NoSuchFieldException, IllegalAccessException{
+    final Field field = beanClass.getField("BEAN_NAME");
+    return String.valueOf(field.get(null));
   }
 
   public static SpringUtil singletonInstance;
@@ -125,8 +116,8 @@ public final class SpringUtil implements BeanFactoryAware, ApplicationContextAwa
    * <code>getSpringBean(SpringUtil.class);</code> except that it can be called
    * more than once (it caches the result).
    */
-  public static synchronized SpringUtil getInstance() {
-    if (singletonInstance == null)
+  public static synchronized SpringUtil getInstance(){
+    if(singletonInstance == null)
       singletonInstance = getSpringBean(SpringUtil.class);
     return singletonInstance;
   }
@@ -134,11 +125,11 @@ public final class SpringUtil implements BeanFactoryAware, ApplicationContextAwa
   /**
    * @return the beanFactory
    */
-  public BeanFactory getBeanFactory() {
+  public BeanFactory getBeanFactory(){
     return beanFactory;
   }
 
-  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
+  public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException{
     this.applicationContext = applicationContext;
     setBeanFactory(applicationContext);
   }
@@ -146,7 +137,7 @@ public final class SpringUtil implements BeanFactoryAware, ApplicationContextAwa
   /**
    * @return the applicationContext
    */
-  public ApplicationContext getApplicationContext() {
+  public ApplicationContext getApplicationContext(){
     return applicationContext;
   }
 
